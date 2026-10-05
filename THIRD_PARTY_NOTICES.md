@@ -15,3 +15,7 @@ Publik Code is not built by, endorsed by, or affiliated with the OpenCode team.
 ## Electron and npm dependencies
 
 Electron and bundled third-party components include their own license notices in the distribution. Runtime and development dependency versions are recorded in `package-lock.json`.
+
+## README brand assets
+
+Project logos are sourced from Lobe Icons and Simple Icons. Sources, licenses, and usage notes are in [docs/branding](docs/branding/README.md). The ecosystem marks identify linked products; they do not imply affiliation or integration.
