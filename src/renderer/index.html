@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Publik Code</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><button id="brand" class="brand" aria-label="Account and projects">publik<span class="dot">.</span><span class="code">code</span></button><span id="project" class="project">Your laptop. Your projects.</span><button id="account" class="quiet">Account & usage</button></header>
+<main id="home">
+<section class="intro"><div class="eyebrow"><span class="status-dot"></span> BUILT ON OPENCODE</div><h1>Make something <br>worth shipping.</h1><p class="lead">A coding agent for the projects on your laptop. <br>Connect your AI, open a folder, and get to work.</p></section>
+<section class="setup" aria-label="Set up your coding agent">
+<div id="error" class="notice error" role="alert" hidden></div><div id="notice" class="notice" role="status" hidden></div>
+<div id="payment" class="notice error" hidden><p id="payment-message"></p><button id="payment-link" class="link">Manage Publik balance ↗</button></div>
+<div class="card"><div class="card-heading"><span class="step">01</span><h2>Connect your AI</h2><span id="connected" class="badge">Get started</span></div>
+<div class="tabs" role="group" aria-label="AI provider"><button id="publik-tab" class="tab active" aria-pressed="true">Publik balance</button><button id="own-tab" class="tab" aria-pressed="false">Your own API key</button></div>
+<div id="publik-panel">
+<p class="description">One account for your AI apps. No API key to copy.</p>
+<div id="consent-panel"><p id="disclosure" class="disclosure"></p><label class="check"><input type="checkbox" id="consent"> I agree to use Publik API as described above.</label><button id="connect" class="primary">Connect Publik <span>↗</span></button><p id="token-note" class="hint" hidden>This source build still needs its builder app token. You can use your own API key while setup is completed.</p></div>
+<div id="wallet-panel" hidden><div class="balance"><span id="balance">Balance unavailable</span><button id="refresh" class="quiet">Refresh</button></div><p id="cost" class="disclosure"></p><button id="link-account" class="primary">Link this computer & pick a plan <span>↗</span></button><p class="hint">After linking in your browser, come back and refresh.</p></div>
+<button id="switch-publik" class="quiet" hidden>Use Publik instead</button>
+</div>
+<form id="own-panel" hidden><p class="description">Connect an OpenAI-compatible API or a local model server.</p><label>API base URL<input id="base-url" type="url" value="https://api.openai.com/v1" required spellcheck="false"></label><label>API key<input id="api-key" type="password" placeholder="Your API key" required autocomplete="off"></label><label>Model ID<input id="own-model" type="text" placeholder="Model ID from your provider" required spellcheck="false"></label><label class="check"><input id="remember" type="checkbox" checked> Remember securely on this computer</label><button class="primary" type="submit">Save connection <span>→</span></button></form>
+</div>
+<div class="card"><div class="card-heading"><span class="step">02</span><h2>Open your project</h2></div><label id="tier-label">Model tier<select id="tier"><option value="publik-balanced">Balanced · everyday coding</option><option value="publik-fast">Fast · simple tasks, lowest cost</option><option value="publik-smart">Smart · harder tasks, linked account required</option></select></label><p class="hint">The agent can read your project. It asks before editing files or running commands. Open a folder you trust.</p><button id="open-project" class="primary dark" disabled>Choose a project folder <span>→</span></button><div id="running-actions" hidden><button id="resume" class="quiet">Return to current workspace →</button><button id="stop" class="quiet danger">Stop workspace</button></div></div>
+</section>
+<footer><span>Runs on your laptop. Model requests go to your chosen provider.</span><button id="source" class="link">Open source ↗</button></footer>
+</main>
+<script src="app.js"></script>
+</body></html>

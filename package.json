@@ -1,0 +1,86 @@
+{
+  "name": "publik-code",
+  "version": "0.1.0",
+  "description": "A desktop coding agent powered by your Publik balance and OpenCode.",
+  "author": "Vedant Soni",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.cjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VedSoni-dev/publikhqapicodingagent.git"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "npm run build && electron .",
+    "test": "tsx --test test/*.test.ts",
+    "test:smoke": "tsx scripts/smoke.ts",
+    "test:desktop": "npm run build && tsx scripts/desktop-smoke.ts",
+    "package:mac": "npm run build && electron-builder --mac --publish never",
+    "package:win": "npm run build && electron-builder --win --publish never",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "opencode-ai": "1.18.34"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@types/node": "22.19.3",
+    "electron": "42.11.10",
+    "electron-builder": "26.15.2",
+    "esbuild": "0.28.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  },
+  "build": {
+    "appId": "com.vedsoni.publikcode",
+    "productName": "Publik Code",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "src/renderer/**/*",
+      "resources/**/*",
+      "publik-app-token.txt",
+      "package.json",
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
+      "!node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build/runtime",
+        "to": "runtime",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "identity": null,
+      "icon": "resources/icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "Publik-Code-${version}-windows-${arch}.${ext}",
+      "icon": "resources/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "artifactName": "Publik-Code-${version}-${os}-${arch}.${ext}"
+  }
+}
