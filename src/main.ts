@@ -167,7 +167,7 @@ app.whenReady().then(() => {
   register('open-link', async (kind: string) => {
     const state = publicState();
     const url = kind === 'payment' ? state.payment?.url : kind === 'account' ? state.accountLink : kind === 'dashboard' ? 'https://publikhq.com/dashboard/api' : kind === 'source' ? 'https://github.com/VedSoni-dev/publikhqapicodingagent' : null;
-    const link = safeLink(url, kind !== 'source');
+    const link = safeLink(url, kind !== 'source' && (kind !== 'payment' || resolveProvider(own).kind === 'publik'));
     if (!link) throw new Error('No valid account link is available. Open your Publik dashboard.');
     await shell.openExternal(link);
   });

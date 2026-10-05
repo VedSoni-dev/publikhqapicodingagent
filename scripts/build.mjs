@@ -4,14 +4,16 @@ import { join } from 'node:path';
 await mkdir('dist', { recursive: true });
 await build({ entryPoints: ['src/main.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'dist/main.cjs', external: ['electron'], target: 'node22', define: { 'import.meta.url': '__publikModuleUrl' }, banner: { js: 'const __publikModuleUrl = require("node:url").pathToFileURL(__filename).href;' } });
 await build({ entryPoints: ['src/preload.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'dist/preload.cjs', external: ['electron'], target: 'node22' });
-const platform = process.platform;
-const arch = process.arch;
+const platform = process.env.PUBLIK_BUILD_PLATFORM || process.platform;
+const arch = process.env.PUBLIK_BUILD_ARCH || process.arch;
+const packagePlatform = platform === 'win32' ? 'windows' : platform;
 const exe = platform === 'win32' ? 'opencode.exe' : 'opencode';
-const candidates = [join('node_modules', `opencode-${platform}-${arch}`, 'bin', exe), join('node_modules', 'opencode-ai', 'node_modules', `opencode-${platform}-${arch}`, 'bin', exe)];
-let source;
-for (const candidate of candidates) { try { await access(candidate); source = candidate; break; } catch {} }
+const candidates = [join('node_modules', `opencode-${packagePlatform}-${arch}`, 'bin', exe), join('node_modules', 'opencode-ai', 'node_modules', `opencode-${packagePlatform}-${arch}`, 'bin', exe)];
+let source = process.env.PUBLIK_RUNTIME_SOURCE;
+for (const candidate of source ? [] : candidates) { try { await access(candidate); source = candidate; break; } catch {} }
 if (!source) throw new Error(`Missing OpenCode binary for ${platform}/${arch}. Run npm ci on the target platform.`);
 await mkdir('build/runtime', { recursive: true });
+await rm(join('build/runtime', platform === 'win32' ? 'opencode' : 'opencode.exe'), { force: true });
 const staged = join('build/runtime', exe + '.new');
 await rm(staged, { force: true });
 await copyFile(source, staged);

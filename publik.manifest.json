@@ -1,0 +1,41 @@
+{
+  "manifestVersion": 1,
+  "slug": "publik-code",
+  "name": "Publik Code",
+  "summary": "A desktop coding agent powered by your Publik balance or your own API key.",
+  "version": null,
+  "license": "MIT",
+  "repository": {
+    "owner": "VedSoni-dev",
+    "repo": "publikhqapicodingagent",
+    "tag": null,
+    "defaultBranch": "main"
+  },
+  "publisher": {
+    "githubLogin": "VedSoni-dev"
+  },
+  "category": "Productivity",
+  "alternativeTo": "Cursor",
+  "outputType": "desktop_app",
+  "platforms": {
+    "macos": true,
+    "windows": true
+  },
+  "artifacts": [],
+  "declaredMacSignature": "unsigned",
+  "declaredWindowsSignature": "unsigned",
+  "run": {
+    "packageManager": "npm",
+    "installCommand": "npm ci",
+    "runCommand": "npm start",
+    "extraToolchains": []
+  },
+  "credentials": [],
+  "permissions": [],
+  "publikApi": {
+    "enabled": true,
+    "products": [
+      "ai.chat"
+    ]
+  }
+}
