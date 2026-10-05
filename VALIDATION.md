@@ -19,4 +19,6 @@ Not yet verified:
 
 GitHub Actions run 37275427723 did not execute build steps. GitHub reported: “The job was not started because your account is locked due to a billing issue.” No CI pass is claimed. The Windows installer was cross-built locally instead.
 
-The reviewable `publik.manifest.json` is a source-install listing proposal. No Publik listing has been submitted and no GitHub release has been published. The proposed slug is `publik-code`, matching the reference module. Complete Publik's manifest approval and device authorization before publishing or minting the app token.
+The approved `publik.manifest.json` was submitted after device authorization. Publik returned status `live` at https://publikhq.com/publik-code, attributed to `VedSoni-dev`, with version ID `fa22ba86-28b6-4308-a6bb-0ddda42b261a`. The page identifies it as live but not yet reviewed by Publik. It is a source-install listing; no GitHub release has been published.
+
+App-token issuance returned `claim_first`: the repository owner must use “Your app? Claim it with GitHub” on the listing. After the claim, retry the documented app-token endpoint, run the live API proof, rebuild the installers with the public token, and publish a GitHub release. No app token or live inference result is claimed yet.

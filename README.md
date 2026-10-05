@@ -6,7 +6,7 @@ Publik Code reuses the **OpenCode 1.18.34 engine and its web interface** inside 
 
 ## Status
 
-Initial developer preview. The launcher, local engine, credential handling, and mock-provider coding flow are implemented. The Publik listing, app token, browser linking, and real paid API proof must be completed before the no-key installation path is available in distributed builds. Until then, use your own API key or the `PUBLIK_API_KEY` environment override.
+Initial developer preview. The launcher, local engine, credential handling, and mock-provider coding flow are implemented. The [Publik listing is live](https://publikhq.com/publik-code) and awaiting the repository owner’s GitHub claim. The app token, browser linking, and real paid API proof must still be completed before the no-key installation path is available in distributed builds. Until then, use your own API key or the `PUBLIK_API_KEY` environment override.
 
 Builds are unsigned; Apple notarization and Windows code signing are not configured. GitHub-hosted build jobs are currently blocked by an account billing lock. A Windows x64 installer can be cross-built on macOS; interactive behavior still needs validation on a Windows laptop. Git is recommended on both platforms. Install Git for Windows if you want the agent to run Bash commands.
 
