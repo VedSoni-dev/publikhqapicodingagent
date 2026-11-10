@@ -1,10 +1,17 @@
 import { app, BrowserWindow, WebContentsView, ipcMain, dialog, shell, Menu, safeStorage, session } from 'electron';
 import { join, dirname } from 'node:path';
-import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
+import { readFileSync, writeFileSync, writeSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { startGateway, safeLink, validateBaseURL, type GatewayEvent } from './gateway';
 import { startRuntime, runtimeConfig, TIERS } from './runtime';
-import { APP_SLUG, APP_VERSION, DISCLOSURE, provision, resolveProvider, readCredential, credentialPath } from './publik';
+import { APP_SLUG, APP_VERSION, DISCLOSURE, provision, resolveProvider, readCredential, credentialPath, selfTest } from './publik';
+
+// Builder check (https://publikhq.com/skills/setup.md): first thing at startup, print one line and exit.
+const SELF_TEST = Boolean(process.env.PUBLIK_SELF_TEST);
+if (SELF_TEST) {
+  // writeSync: an async pipe write would be lost when app.exit() tears the process down.
+  void selfTest().then(line => { try { writeSync(1, `${line}\n`); } catch {} app.exit(0); });
+}
 
 app.setName('Publik Code');
 let window: BrowserWindow;
@@ -136,6 +143,7 @@ function register(channel: string, action: (...args: any[]) => any) {
   });
 }
 app.whenReady().then(() => {
+  if (SELF_TEST) return;
   loadOwn();
   window = new BrowserWindow({ width: 1240, height: 840, minWidth: 720, minHeight: 640, title: 'Publik Code', backgroundColor: '#f6f4ef', webPreferences: { preload: join(root, 'dist/preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
   window.webContents.on('will-navigate', event => event.preventDefault());

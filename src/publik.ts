@@ -119,6 +119,16 @@ export async function provision(): Promise<PublikCredential> {
   throw new Error("publik API could not set up this computer. Use your own key for now.");
 }
 
+/** Builder check, run by the BUILT app: start it with PUBLIK_SELF_TEST=1, print this line, exit.
+ *  It provisions for real; the builder who runs it is the consent. */
+export async function selfTest(): Promise<string> {
+  try {
+    return `publik self-test: ok ${APP_SLUG} ${APP_VERSION} (install ${(await provision()).install_id.slice(0, 8)})`;
+  } catch (e) {
+    return `publik self-test: failed: ${e instanceof Error ? e.message : String(e)}`;
+  }
+}
+
 /** OpenAI-compatible client config: new OpenAI(clientConfig(p)). */
 export function clientConfig(p: Extract<Provider, { kind: "own" | "publik" }>) {
   return { baseURL: p.baseURL, apiKey: p.apiKey };
