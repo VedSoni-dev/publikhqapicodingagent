@@ -1,18 +1,16 @@
 # Developer guide
 
-A desktop coding agent for **macOS and Windows**, using your Publik balance or your own OpenAI-compatible API. Open a local project, describe a task, and review the agent's edits and commands.
+A desktop coding agent for **macOS and Windows**, using your Publik balance or your own OpenAI-compatible API. Open a local project, describe a task, and approve the agent's edits and commands.
 
-Publik Code reuses the **OpenCode 1.18.34 engine and its web interface** inside an Electron launcher. It is an independent project, not an official OpenCode product. We maintain the small desktop and Publik integration layer instead of forking the agent loop or editor.
+Publik Code's engine is **built on [Pi](https://github.com/earendil-works/pi)** (`@earendil-works/pi-coding-agent`, MIT): Pi supplies the agent loop, the read/edit/write/bash tools, sessions and context compaction. Publik Code adds the desktop UI, Publik as the default provider, an approval gate, and a local gateway that keeps keys away from the engine. It is an independent project, not Pi itself and not affiliated with the Pi project.
 
 ## Status
 
-Initial developer preview. The launcher, local engine, credential handling, and mock-provider coding flow are implemented. The [Publik listing is live](https://publikhq.com/publik-code) ; the last app-token request returned `claim_first`, so Publik has not yet confirmed the owner claim to that endpoint. The app token, browser linking, and real paid API proof must still be completed before the no-key installation path is available in distributed builds. Until then, use your own API key or the `PUBLIK_API_KEY` environment override.
-
-Builds are unsigned; Apple notarization and Windows code signing are not configured. GitHub-hosted build jobs are currently blocked by an account billing lock. A Windows x64 installer can be cross-built on macOS; interactive behavior still needs validation on a Windows laptop. Git is recommended on both platforms. Install Git for Windows if you want the agent to run Bash commands.
+v0.1.0. Publik provisioning is wired and self-tested from the packaged macOS app (`publik self-test: ok publik-code 0.1.0`). Builds are unsigned; Apple notarization and Windows code signing are not configured. The Windows installer is cross-built on macOS; interactive Windows behavior still needs a Windows laptop. GitHub-hosted CI is configured but currently blocked by a GitHub account billing lock.
 
 ## Run from source
 
-Install Node.js 22.18 or newer and Git, then:
+Install Node.js 22.19 or newer and Git, then:
 
 ```sh
 git clone https://github.com/VedSoni-dev/publikhqapicodingagent.git
@@ -21,65 +19,55 @@ npm ci
 npm start
 ```
 
-The pinned OpenCode binary is downloaded by npm for your OS and bundled with the application. No separate OpenCode installation is required. First use may download upstream runtime dependencies. Source builds support macOS and Windows; Linux packaging is not configured.
+Source checkouts don't include the Publik app token (`publik-app-token.txt` is kept out of git), so from source use **Your own API key**, or set `PUBLIK_API_KEY`. Release builds include the token and connect to Publik with no key.
 
 1. Connect Publik after reading the first-run disclosure, or choose **Your own API key**.
-2. For Publik, open **Link this computer & pick a plan** in your browser. Return and refresh the balance.
-3. Select Fast, Balanced, or Smart, then choose a project folder you trust.
-4. Use OpenCode's interface to give the agent a task. Reads are allowed; edits, shell commands, and other tools ask for approval.
-5. Use **Account & usage** to return to the launcher while the workspace stays open.
-
-Your own API connection takes precedence when saved. Stop the workspace before switching providers. Choose **Use Publik instead** to remove the saved own-key connection.
+2. For Publik, open **Link this computer & pick a plan** in your browser ($0.05 free on first link). Return and refresh the balance.
+3. Choose a project folder you trust.
+4. Ask for a change. Reads, listings and searches run freely; every edit, file write and shell command shows a diff or the command and waits for **Allow** / **Decline**. "Allow for this session" skips the prompt for that tool until you close the project.
+5. Switch Fast / Balanced / Smart from the workspace bar. **New chat** starts a fresh session; reopening a project continues its last session.
 
 ## Publik integration
 
-- Base URL: `https://publikhq.com/api/v1`.
-- Tiers: `publik-fast`, `publik-balanced`, `publik-smart`. Balanced is the initial coding selection; Fast is the cheapest option. Smart needs a linked computer.
-- New installs start at $0.00; first account linking grants $0.05 once, according to Publik's documentation.
-- Uses Publik's TypeScript reference module for consent, installation provisioning, and the documented credential path.
-- The public builder token belongs in `publik-app-token.txt` at the repository root and is packaged with the app. It only provisions keys for this app. It is intentionally committed once obtained. No fake token is included.
-- Each installation's private key stays in its per-app Publik credential file, never in the repository, renderer state, command arguments, or application logs.
-- `PUBLIK_API_KEY` and `PUBLIK_API_BASE_URL` override the saved Publik credential. `PUBLIK_APP_TOKEN` overrides the packaged public app token. The current intended listing slug is `publik-code`; confirm it against the actual listing before issuing a token.
-- On HTTP 402, the app shows Publik's message and its one top-up/claim link. Wallet refresh does not run a model call.
-- Requests are limited to under 4 MB. Tier context/output limits use conservative 32,768/8,192 defaults until Publik documents them.
-
-Builder setup: follow [Publik's integration skill](https://publikhq.com/skills/api.md) to obtain the public token using browser authorization. Follow [the publishing skill](https://publikhq.com/skills/publish.md) for the listing. Never paste private keys into chat or source files.
+- Base URL `https://publikhq.com/api/v1`; tiers `publik-fast`, `publik-balanced` (default), `publik-smart` (needs a linked computer).
+- `src/publik.ts` is Publik's TypeScript reference module: disclosure, `POST /installs` provisioning, the per-app credential file (mode 0600), `selfTest()`.
+- Resolution order: your own key > `PUBLIK_API_KEY` / `PUBLIK_API_BASE_URL` > credential file > provision on first launch after consent.
+- On HTTP 402 the workspace shows Publik's message and its single top-up/claim link; your own key keeps working.
+- `x-publik-*` headers update the balance shown in the workspace bar.
+- Self-test: `PUBLIK_SELF_TEST=1 "Publik Code.app/Contents/MacOS/Publik Code"` prints `publik self-test: ok publik-code <version> …` and exits.
 
 ## How it works
 
 ```text
-Electron account / project launcher
-  ├─ Publik provisioning and balance (main process)
-  ├─ OpenCode web UI (isolated sandboxed renderer)
-  └─ OpenCode engine (local authenticated process)
-       ├─ reads, edits, shell tools on your laptop
-       └─ authenticated loopback model adapter
-            └─ Publik API or your own provider
+Electron window (sandboxed renderer: onboarding, workspace, approvals)
+  └─ main process
+       ├─ Publik provisioning + wallet (src/publik.ts)
+       ├─ Pi agent session (src/engine.ts, @earendil-works/pi-coding-agent)
+       │    ├─ read / ls / find / grep        → run freely
+       │    └─ edit / write / bash            → approval gate (Pi tool_call hook)
+       └─ loopback gateway (src/gateway.ts, random bearer token)
+            └─ Publik API or your own provider (real key only here)
 ```
 
-The local adapter keeps the actual upstream key out of OpenCode's configuration and web UI, forwards streaming responses, and captures Publik metering/errors. OpenCode gets a temporary local credential. Both services listen only on loopback with random authentication credentials. Engine state lives in the app's own data directory, separate from an existing OpenCode installation. Project-level OpenCode configuration and third-party plugins are disabled in this initial release; repository instructions may still apply. Tool approval is a user control, not an OS filesystem sandbox.
+Pi sees only the loopback URL and a per-launch token. Pi's state (sessions) lives in the app's own data folder, not `~/.pi`. Project `.pi/` extensions, skills and prompt templates are not loaded; `AGENTS.md` / `CLAUDE.md` context files are, as in Pi.
 
-Sessions and coding history remain on your computer. Prompts and relevant project content are sent to the selected model provider. Publik describes upstream retention in its [developer documentation](https://publikhq.com/developers). User-supplied keys can be saved using Electron's OS-backed encrypted storage or kept only for the current app session. Windows inherits the user's profile ACLs for Publik credentials; POSIX credentials use mode 0600.
+**Approvals are not a sandbox.** An approved command runs with your user account's permissions, and file contents or tool output can steer the model (prompt injection). Open projects you trust; for untrusted code use a VM or container.
 
 ## Development and verification
 
 ```sh
 npm run typecheck
-npm test
-npm run build
-npm run test:smoke
-npm run test:desktop
+npm test             # unit + Pi engine tests against a scripted local model
+npm run test:desktop # Electron end-to-end: connect, approve an edit, decline a command
 ```
 
-The smoke test starts the real pinned OpenCode executable against a local OpenAI-compatible mock. It checks authenticated startup, UI serving, streaming, an actual read tool, and the tool-result round trip. These tests do not spend Publik credit or prove live Publik compatibility.
+None of these spend Publik credit.
 
 ```sh
-npm run package:mac   # run on macOS; DMG and ZIP
-npm run package:win   # run on Windows; NSIS installer
+npm run package:mac   # DMG and ZIP
+npm run package:win   # NSIS installer
 ```
-
-Build each package on its target platform so it contains the correct OpenCode executable. The build workflow uploads platform artifacts; release publishing is a separate step. macOS artifacts are unsigned and not notarized.
 
 ## License and credits
 
-MIT. OpenCode is MIT-licensed; see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). The Publik integration reference is attributed in its source. Electron and other dependencies retain their respective licenses.
+MIT. Built on Pi (MIT, © Mario Zechner); see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). The Publik integration reference is attributed in its source.

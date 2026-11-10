@@ -1,136 +1,114 @@
 <p align="center">
-  <img src="docs/media/cover.png" alt="Publik Code — Your code. Your models. Your laptop." width="100%">
+  <img src="docs/media/cover.png" alt="Publik Code — a coding agent that asks before it acts. Built on Pi." width="100%">
 </p>
 
 <p align="center">
-  <strong>An open-source coding workspace for the projects on your laptop.</strong><br>
-  Choose a model provider. Open a folder. Make something worth shipping.
+  <strong>A free, open-source coding agent for the projects on your laptop.</strong><br>
+  Built on <a href="https://github.com/earendil-works/pi">Pi</a>. Every edit and command waits for your OK. Pay per use with Publik, or bring your own key.
 </p>
 
 <p align="center">
-  <a href="https://publikhq.com/publik-code"><img alt="View on Publik" src="https://img.shields.io/badge/ON_PUBLIK-617B51?style=for-the-badge"></a>
-  <a href="#get-started"><img alt="macOS and Windows" src="https://img.shields.io/badge/macOS_%2B_Windows-303C2B?style=for-the-badge"></a>
+  <a href="https://publikhq.com/publik-code"><img alt="Get it on Publik" src="https://img.shields.io/badge/GET_IT_ON_PUBLIK-617B51?style=for-the-badge"></a>
+  <a href="#install"><img alt="macOS and Windows" src="https://img.shields.io/badge/macOS_%2B_Windows-303C2B?style=for-the-badge"></a>
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/MIT_OPEN_SOURCE-748B60?style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <a href="#see-it-in-action"><strong>Watch the demo</strong></a> ·
-  <a href="#get-started"><strong>Get started</strong></a> ·
+  <a href="#install"><strong>Install</strong></a> ·
+  <a href="#how-it-compares"><strong>Compare</strong></a> ·
+  <a href="CHANGELOG.md"><strong>Changelog</strong></a> ·
   <a href="docs/DEVELOPMENT.md"><strong>Developer guide</strong></a> ·
-  <a href="https://publikhq.com/publik-code"><strong>View on Publik ↗</strong></a>
+  <a href="https://publikhq.com/publik-code"><strong>Publik listing ↗</strong></a>
 </p>
 
-> **Developer preview:** connect your own OpenAI-compatible API today. Publik account linking is implemented, but its app-token setup and live verification are still pending. [Current validation status →](VALIDATION.md)
+## What it does
 
-## See it in action
+Open a folder, say what you want changed, and watch the agent work. It reads your code freely, then shows you **a diff before every edit** and **the exact command before every shell call**. Allow or decline, one step at a time, or allow a tool for the rest of the session.
+
+- **No key to paste.** Publik Code runs on [Publik](https://publikhq.com) by default: `publik-balanced` for everyday coding, `publik-fast` for quick jobs, `publik-smart` for hard ones. Link this computer once for $0.05 of free use; after that you pay per call from your Publik balance. The workspace shows your balance as you go.
+- **Or bring your own.** Any OpenAI-compatible endpoint works: OpenAI, OpenRouter, a local server like Ollama or LM Studio. Keys are stored with your OS's encryption, or kept for the session only.
+- **A real agent loop.** The engine is [Pi](https://github.com/earendil-works/pi): read / edit / write / bash tools, persistent sessions per folder, and automatic context compaction for long tasks.
+- **Runs on your laptop.** Your files stay where they are. Prompts and the code the agent reads go to the model provider you chose.
 
 <p align="center">
-  <img src="docs/media/demo.gif" alt="Publik Code demo: enter a prompt, watch OpenCode read a local README, and see the answer." width="100%">
+  <img src="docs/media/02-publik-linking.png" alt="Publik Code connected to Publik: balance, cost disclosure, and the link-this-computer button." width="100%">
 </p>
 
-<p align="center"><sub>Recorded in the real desktop app with a deterministic local mock provider. The engine reads a real demo file; this is not a live Publik model call. <a href="docs/media/coding-session.png">View the still image</a>.</sub></p>
-
-## A familiar workflow, with your choice of models
-
-| Work on your laptop | Choose how you connect | Stay in control |
-|:---|:---|:---|
-| Open a local project and keep your sessions on your computer. | Bring an OpenAI-compatible API, or use the Publik connection once setup is complete. | Inspect tool activity and approve edits and commands before they run. |
-
-Publik Code pairs a small desktop launcher with **OpenCode’s existing coding engine and interface**. File tools, streaming responses, conversations, and the working session come from OpenCode. Our layer handles the desktop window, provider setup, project selection, and Publik balance/error integration.
-
-### From project to progress
-
-1. **Connect your AI.** Add your own API base URL, key, and model ID. Keep the key for this session or save it with OS-backed encryption.
-2. **Open a folder.** Select a project you trust. The bundled OpenCode engine starts locally.
-3. **Give it a task.** Explore the code, ask for a change, and review the tools the agent wants to run.
-
-Your files are local; prompts and relevant project content go to the provider you select. Tool approvals are a user control, not an operating-system sandbox.
-
 <details>
-<summary><strong>Take a closer look at the desktop</strong></summary>
-
+<summary><strong>More screenshots</strong></summary>
 <br>
-<img src="docs/media/connection.png" alt="Publik Code connection screen with a local demo provider configured." width="100%">
 
-A calm place to choose your provider and open a project. The screenshot uses a local demonstration server and contains no real API credentials.
-
-<img src="docs/media/coding-session.png" alt="OpenCode’s coding workspace running inside Publik Code." width="100%">
-
-The OpenCode workspace, embedded in Publik Code. **Account & usage** takes you back to the launcher without closing the workspace.
+| First run | Bring your own key |
+|:---:|:---:|
+| <img src="docs/media/01-first-run.png" alt="First run: connect Publik after reading the disclosure, or use your own key." width="100%"> | <img src="docs/media/05-settings-own-key.png" alt="Own-key settings: API base URL, key, model ID." width="100%"> |
 
 </details>
 
-## Get started
+## Install
 
-You’ll need **Node.js 22.18+** and **Git**. The pinned OpenCode executable is downloaded for your platform; you don’t need to install OpenCode separately.
+**Download** the latest build from [Releases](https://github.com/VedSoni-dev/publikhqapicodingagent/releases) or from the [Publik listing](https://publikhq.com/publik-code):
 
-```sh
-git clone https://github.com/VedSoni-dev/publikhqapicodingagent.git
-cd publikhqapicodingagent
-npm ci
-npm start
-```
-
-Open **Your own API key**, enter your provider’s OpenAI-compatible endpoint and model, then choose a project folder. For a local model server, use its loopback endpoint.
-
-| Platform | Current status |
-|:---|:---|
-| **macOS · Apple Silicon** | App and packaged launch tested. DMG and ZIP builds verified locally. |
-| **Windows · x64** | Installer cross-built. Interactive Windows testing is still pending; Git for Windows is recommended for Bash tools. |
-
-Builds are currently unsigned, and no GitHub release has been published. [Build your own installer →](docs/DEVELOPMENT.md#development-and-verification)
-
-## Two ways to connect
-
-| | Your own API | Publik balance |
+| Platform | File | Notes |
 |:---|:---|:---|
-| **Setup** | Enter an API base URL, key, and model ID. | Link the computer to your Publik account in your browser. |
-| **Models** | Models exposed by your OpenAI-compatible provider. | `publik-fast`, `publik-balanced`, `publik-smart`. |
-| **Billing** | Through your chosen provider. | Through your Publik balance. |
-| **Availability** | Available in this preview. | Integration implemented; app token and live proof pending. |
+| macOS · Apple Silicon | `Publik-Code-<version>-mac-arm64.dmg` | Unsigned: the first time, right-click the app → **Open** → **Open**. |
+| Windows · x64 | `Publik-Code-<version>-windows-x64.exe` | Unsigned: SmartScreen may say "Windows protected your PC" → **More info** → **Run anyway**. Install [Git for Windows](https://git-scm.com/download/win) so the agent can run shell commands. |
 
-A saved own-key connection takes precedence. Stop the workspace before switching providers. The actual upstream key stays in the main process/local credential storage; OpenCode receives a temporary credential for the authenticated local adapter.
+Then:
 
-## Built with good open-source tools
+1. **Connect your AI.** Read the one-paragraph disclosure and click **Connect Publik**, or open **Your own API key**.
+2. **Link this computer** (Publik only) in your browser for $0.05 of free use, then come back and hit **Refresh**.
+3. **Open a project folder** you trust and ask for a change.
 
-<table>
-<tr>
-<td align="center" width="20%"><a href="https://github.com/anomalyco/opencode"><img src="docs/branding/opencode-tile.svg" width="64" height="64" alt="OpenCode"><br><strong>OpenCode</strong></a><br><sub>Coding engine & interface</sub></td>
-<td align="center" width="20%"><a href="https://www.electronjs.org/"><img src="docs/branding/electron-tile.svg" width="64" height="64" alt="Electron"><br><strong>Electron</strong></a><br><sub>Desktop application</sub></td>
-<td align="center" width="20%"><a href="https://www.typescriptlang.org/"><img src="docs/branding/typescript-tile.svg" width="64" height="64" alt="TypeScript"><br><strong>TypeScript</strong></a><br><sub>Integration layer</sub></td>
-<td align="center" width="20%"><a href="https://nodejs.org/"><img src="docs/branding/nodedotjs-tile.svg" width="64" height="64" alt="Node.js"><br><strong>Node.js</strong></a><br><sub>Local runtime tools</sub></td>
-<td align="center" width="20%"><a href="https://git-scm.com/"><img src="docs/branding/git-tile.svg" width="64" height="64" alt="Git"><br><strong>Git</strong></a><br><sub>Your project workflow</sub></td>
-</tr>
-</table>
+**From source** (Node.js 22.19+, Git): `git clone`, `npm ci`, `npm start`. Source checkouts don't carry the Publik app token, so use your own key there. Details in the [developer guide](docs/DEVELOPMENT.md).
 
-## Explore the coding-agent ecosystem
+## How it compares
 
-If you’re exploring tools like **Cursor** or **Claude Code**, here are other projects worth knowing. These are reference links, not Publik Code integrations or endorsements.
+A fair, feature-by-feature look. Cursor and Claude Code are excellent products with far more features. Publik Code is for people who want a small, open, pay-per-use agent with an approval step on every change.
 
-<table>
-<tr>
-<td align="center" width="16%"><a href="https://cursor.com/"><img src="docs/branding/cursor-tile.svg" width="64" height="64" alt="Cursor"><br><strong>Cursor</strong></a></td>
-<td align="center" width="17%"><a href="https://claude.com/product/claude-code"><img src="docs/branding/claudecode-tile.svg" width="64" height="64" alt="Claude Code"><br><strong>Claude Code</strong></a></td>
-<td align="center" width="17%"><a href="https://github.com/features/copilot"><img src="docs/branding/githubcopilot-tile.svg" width="64" height="64" alt="GitHub Copilot"><br><strong>GitHub Copilot</strong></a></td>
-<td align="center" width="16%"><a href="https://windsurf.com/"><img src="docs/branding/windsurf-tile.svg" width="64" height="64" alt="Windsurf"><br><strong>Windsurf</strong></a></td>
-<td align="center" width="17%"><a href="https://github.com/google-gemini/gemini-cli"><img src="docs/branding/gemini-tile.svg" width="64" height="64" alt="Gemini CLI"><br><strong>Gemini CLI</strong></a></td>
-<td align="center" width="17%"><a href="https://github.com/openai/codex"><img src="docs/branding/openai-tile.svg" width="64" height="64" alt="OpenAI Codex"><br><strong>Codex</strong></a></td>
-</tr>
-</table>
+| | **Publik Code** | **Cursor** | **Claude Code** |
+|:---|:---|:---|:---|
+| What it is | Desktop agent app (chat + approvals) | AI code editor (VS Code fork) | Agent in the terminal, IDE extensions, desktop and web |
+| Code editor, tab autocomplete | ✗ (use your own editor alongside) | ✓ | ✗ editor; works with yours |
+| Agent edits files and runs commands | ✓ | ✓ | ✓ |
+| Approval before every edit and command | ✓ always on; per-tool "allow for session" | Configurable | Configurable permission modes |
+| Diff shown before applying an edit | ✓ | ✓ | ✓ |
+| Models | Publik tiers, or any OpenAI-compatible API / local model | Many hosted models, BYO key for some | Claude models |
+| Pricing | App is free; pay per use from a Publik balance ($0.05 free on first link), or your own provider's rates | Free tier with limits; paid subscriptions | Claude subscription or API usage |
+| Sessions persist per project | ✓ | ✓ | ✓ |
+| Long-task context compaction | ✓ (Pi) | ✓ | ✓ |
+| MCP servers, plugins, hooks | ✗ not yet | ✓ | ✓ |
+| Background / cloud agents | ✗ | ✓ | ✓ |
+| Open source | ✓ MIT | ✗ | ✗ |
+| Platforms | macOS (Apple Silicon), Windows x64 | macOS, Windows, Linux | macOS, Windows, Linux |
+
+> **Tool approvals are not a sandbox.** When you allow a command, it runs with your user account's full permissions. Files, comments and command output in a project can steer the model (prompt injection). Open projects you trust, read commands before you allow them, and use a VM or container for untrusted code.
+
+## Publik API
+
+Publik Code is wired to the [Publik API](https://publikhq.com/skills/api.md) (`https://publikhq.com/api/v1`, OpenAI-compatible):
+
+- On first connect the app provisions its own per-install key (`POST /installs`) and stores it in Publik's per-app credential file (mode 0600). No key is ever shown or logged.
+- Requests go through a local loopback gateway, so the coding engine never sees your Publik or own key.
+- Only Publik tiers are sent (`publik-fast`, `publik-balanced`, `publik-smart`). `x-publik-*` headers keep the balance current.
+- An empty balance (HTTP 402) shows Publik's message and one top-up link; your own key keeps working.
+- Release builds pass Publik's built-app check: `PUBLIK_SELF_TEST=1 "Publik Code.app/Contents/MacOS/Publik Code"` → `publik self-test: ok publik-code 0.1.0`.
+
+## Privacy
+
+Everything runs locally except model calls. Sessions are stored in the app's data folder on your computer. Publik [says](https://publikhq.com/developers) it does not train on requests and keeps no bodies beyond a 24-hour idempotency fingerprint (provider abuse retention still applies). With your own key, your provider's terms apply.
 
 ## For builders
 
 ```sh
-npm run typecheck       # Check the TypeScript
-npm test                # Focused adapter and lifecycle tests
-npm run test:smoke      # Real OpenCode + local mock model + actual file tool
-npm run test:desktop    # Desktop connection, workspace, and shutdown checks
+npm ci
+npm run typecheck
+npm test             # Publik module, gateway, and the Pi engine against a scripted local model
+npm run test:desktop # Electron end-to-end: connect, approve an edit, decline a command
+npm run package:mac  # or package:win
 ```
 
-Read the [developer guide](docs/DEVELOPMENT.md) for architecture, credential handling, Publik setup, and packaging. See [validation notes](VALIDATION.md) for what has—and has not—been tested. [Re-record the demo](docs/media/README.md); it never calls a paid model.
+Architecture, credential handling, and packaging: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). What's been verified: [VALIDATION.md](VALIDATION.md). Listing media is captured from the real app with `scripts/capture-media.ts`.
 
-## Open source, with attribution
+## Credits
 
-[MIT licensed](LICENSE). Built on [OpenCode](https://github.com/anomalyco/opencode), with gratitude to its maintainers and contributors. Publik Code is an independent project and is not affiliated with the OpenCode team or the other products shown above.
-
-[Third-party notices](THIRD_PARTY_NOTICES.md) · [Brand asset sources](docs/branding/README.md) · [Publik listing](https://publikhq.com/publik-code)
+[MIT licensed](LICENSE). **Built on [Pi](https://github.com/earendil-works/pi)** by Mario Zechner and contributors (MIT); Publik Code is an independent project, not Pi itself, and isn't affiliated with or endorsed by the Pi project, Cursor, or Anthropic. Earlier development builds used [OpenCode](https://github.com/anomalyco/opencode). [Third-party notices](THIRD_PARTY_NOTICES.md) · [Brand asset sources](docs/branding/README.md).

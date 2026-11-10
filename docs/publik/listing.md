@@ -1,41 +1,19 @@
-# Publik Code — listing asset pack
+# Publik Code — listing copy
 
-Live listing: https://publikhq.com/publik-code
+Live listing: https://publikhq.com/publik-code · Source of truth: `publik.manifest.json`, README, GitHub releases.
 
-## Proposed short summary
+- **Name:** Publik Code
+- **Summary (≤80):** Free coding agent built on Pi: approve every edit, pay per use or BYO key.
+- **Tagline:** A coding agent that asks before it acts.
+- **Alternative to:** Cursor
 
-A calm, open-source coding workspace for your projects, models, and laptop.
+## Introduction
 
-## Product introduction
+Open a folder, say what you want changed, and watch the agent work. Publik Code reads your code freely, then shows a diff before every edit and the exact command before every shell call. Allow or decline each step.
 
-Your code. Your models. Your laptop.
+It runs on Publik by default — no key to paste, $0.05 free when you link this computer, then pay per use — or on any OpenAI-compatible API or local model. The engine is built on Pi (MIT): real tools, sessions per project, and context compaction for long tasks. MIT-licensed, macOS and Windows.
 
-Publik Code brings OpenCode’s coding engine and interface into a desktop app for macOS and Windows. Connect an OpenAI-compatible API, open a local project, and work with an agent that asks before editing files or running commands.
-
-A small desktop layer handles provider setup, local project selection, and the Publik balance integration. OpenCode supplies the agent workflow. The project is MIT-licensed and designed to reuse existing open-source tools.
+Tool approvals are not a sandbox: an approved command runs with your account's permissions.
 
 ## Media
-
-- Cover: [cover.png](../media/cover.png) — original editorial artwork, not a screenshot.
-- Demo: [demo.gif](../media/demo.gif) — actual app capture with a local mock provider. Keep that disclosure wherever the GIF is displayed.
-- Workspace screenshot: [coding-session.png](../media/coding-session.png).
-- Connection screenshot: [connection.png](../media/connection.png).
-- Brand source/attribution: [branding/README.md](../branding/README.md).
-
-## Highlights
-
-- Local project folders and persistent coding sessions.
-- Your choice of OpenAI-compatible API provider.
-- OpenCode’s existing coding interface and tools.
-- Approval prompts for edits and commands.
-- Open-source desktop integration for macOS and Windows.
-
-## Preview availability
-
-Own-key connections work in the developer preview. Publik account linking is implemented, but app-token setup and live API verification remain pending. macOS Apple Silicon has been tested; the Windows x64 installer is cross-built and still needs interactive Windows testing. Builds are unsigned.
-
-## Publishing constraints
-
-Publik’s documented update flow is to publish a new GitHub release, then wait for the scan/review or use the dashboard’s “Check GitHub for a new release now.” Its discovered public tools do not expose cover, GIF, screenshot, or long-description fields for an existing listing. Do not submit invented media fields or assume README assets will automatically become listing media.
-
-This asset pack is ready for a supported media editor or Publik-admin upload. It has not been applied to the live catalog page. The existing approved `publik.manifest.json` remains a record of the submitted listing.
+See `docs/media/README.md`. All captures are from the real app; nothing uses a mock model.

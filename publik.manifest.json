@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "slug": "publik-code",
   "name": "Publik Code",
-  "summary": "A desktop coding agent powered by your Publik balance or your own API key.",
+  "summary": "Free coding agent built on Pi: approve every edit, pay per use or BYO key.",
   "version": null,
   "license": "MIT",
   "repository": {
