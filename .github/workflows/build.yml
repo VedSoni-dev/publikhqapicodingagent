@@ -1,7 +1,7 @@
 name: Build desktop apps
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main, 'codex/**', 'keeper/**']
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -24,13 +24,27 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm run test:smoke
       - run: npm run test:desktop
         if: runner.os == 'macOS'
+      # The public pat_ app token lives in an Actions secret, not git. Without it the
+      # build still works; the app offers "use your own key" and the self-test is skipped.
+      - name: Add Publik app token
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.PUBLIK_APP_TOKEN }}
+        run: if [ -n "$TOKEN" ]; then printf '%s' "$TOKEN" > publik-app-token.txt; else echo "No PUBLIK_APP_TOKEN secret; building without Publik provisioning."; fi
       - run: npm run package:mac
         if: runner.os == 'macOS'
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # Provisions one real install, so only on release tags.
+      - name: Publik self-test (packaged app)
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/v') && hashFiles('publik-app-token.txt') != ''
+        run: |
+          app=$(ls -d release/mac*/"Publik Code.app" | head -1)
+          line=$(PUBLIK_SELF_TEST=1 "$app/Contents/MacOS/Publik Code" 2>/dev/null)
+          echo "$line"
+          case "$line" in "publik self-test: ok "*) ;; *) exit 1;; esac
       - run: npm run package:win
         if: runner.os == 'Windows'
       - uses: actions/upload-artifact@v4

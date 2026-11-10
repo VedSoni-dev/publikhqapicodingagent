@@ -1,12 +1,16 @@
 # Third-party notices
 
-## OpenCode
+## Pi
 
-This application bundles OpenCode 1.18.34 and displays its web interface. OpenCode is developed by Anomaly and contributors, licensed under MIT. The full license is included in `resources/OPENCODE-LICENSE`.
+Publik Code's agent engine is built on Pi (`@earendil-works/pi-coding-agent` 1.5.1 and its `@earendil-works/pi-*` packages): the agent loop, built-in read/edit/write/bash tools, sessions and compaction. Pi is created by Mario Zechner and contributors and is licensed under MIT. The full license is included in `resources/PI-LICENSE`.
 
-Source: https://github.com/anomalyco/opencode
+Source: https://github.com/earendil-works/pi
 
-Publik Code is not built by, endorsed by, or affiliated with the OpenCode team.
+Publik Code is built on Pi; it is not Pi, and it is not built by, endorsed by, or affiliated with the Pi project or Earendil.
+
+## OpenCode (versions before the Pi engine)
+
+Earlier development builds (October 2026) bundled OpenCode 1.18.34 (MIT, https://github.com/anomalyco/opencode). Current builds do not include OpenCode.
 
 ## Publik reference integration
 

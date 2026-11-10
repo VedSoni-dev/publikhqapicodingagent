@@ -2,13 +2,13 @@
   "manifestVersion": 1,
   "slug": "publik-code",
   "name": "Publik Code",
-  "summary": "A desktop coding agent powered by your Publik balance or your own API key.",
-  "version": null,
+  "summary": "Free coding agent built on Pi: approve every edit, pay per use or BYO key.",
+  "version": "v0.1.0",
   "license": "MIT",
   "repository": {
     "owner": "VedSoni-dev",
     "repo": "publikhqapicodingagent",
-    "tag": null,
+    "tag": "v0.1.0",
     "defaultBranch": "main"
   },
   "publisher": {
@@ -21,7 +21,35 @@
     "macos": true,
     "windows": true
   },
-  "artifacts": [],
+  "artifacts": [
+    {
+      "platform": "macos",
+      "arch": "arm64",
+      "name": "Publik-Code-0.1.0-mac-arm64.dmg",
+      "url": "https://github.com/VedSoni-dev/publikhqapicodingagent/releases/download/v0.1.0/Publik-Code-0.1.0-mac-arm64.dmg",
+      "sizeBytes": 140786152,
+      "type": "dmg",
+      "sha256": "43c2be8ad434425864fea1b87f49ff1e93d60bfc4f527bd8a3bda3c3508f1054"
+    },
+    {
+      "platform": "macos",
+      "arch": "arm64",
+      "name": "Publik-Code-0.1.0-mac-arm64.zip",
+      "url": "https://github.com/VedSoni-dev/publikhqapicodingagent/releases/download/v0.1.0/Publik-Code-0.1.0-mac-arm64.zip",
+      "sizeBytes": 140780175,
+      "type": "zip",
+      "sha256": "84ded33a8e0e8c8cb3a6db001e4b69dbe0677780f11d3b27135679b69dfd18d3"
+    },
+    {
+      "platform": "windows",
+      "arch": "x64",
+      "name": "Publik-Code-0.1.0-windows-x64.exe",
+      "url": "https://github.com/VedSoni-dev/publikhqapicodingagent/releases/download/v0.1.0/Publik-Code-0.1.0-windows-x64.exe",
+      "sizeBytes": 117318413,
+      "type": "exe",
+      "sha256": "ae82dc70fbbc813333a4f6a115b0cfc0acd15be305e0ac342b847c5e0dec62aa"
+    }
+  ],
   "declaredMacSignature": "unsigned",
   "declaredWindowsSignature": "unsigned",
   "run": {

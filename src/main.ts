@@ -1,15 +1,24 @@
-import { app, BrowserWindow, WebContentsView, ipcMain, dialog, shell, Menu, safeStorage, session } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell, Menu, safeStorage } from 'electron';
 import { join, dirname } from 'node:path';
-import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
+import { readFileSync, writeFileSync, writeSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { startGateway, safeLink, validateBaseURL, type GatewayEvent } from './gateway';
-import { startRuntime, runtimeConfig, TIERS } from './runtime';
-import { APP_SLUG, APP_VERSION, DISCLOSURE, provision, resolveProvider, readCredential, credentialPath } from './publik';
+import { startEngine, TIERS, type Engine, type EngineEvent, type Tier } from './engine';
+import { APP_SLUG, APP_VERSION, DISCLOSURE, provision, resolveProvider, readCredential, credentialPath, selfTest } from './publik';
+
+// Builder check (https://publikhq.com/skills/setup.md): first thing at startup, print one line and exit.
+const SELF_TEST = Boolean(process.env.PUBLIK_SELF_TEST);
+if (SELF_TEST) {
+  // writeSync: an async pipe write would be lost when app.exit() tears the process down.
+  void selfTest().then(line => { try { writeSync(1, `${line}\n`); } catch {} app.exit(0); });
+}
 
 app.setName('Publik Code');
 let window: BrowserWindow;
-let view: WebContentsView | undefined;
-let engine: Awaited<ReturnType<typeof startRuntime>> | undefined;
+let engine: Engine | undefined;
+let tier: Tier = 'publik-balanced';
+const pending = new Map<string, { tool: string; resolve: (ok: boolean) => void }>();
+const alwaysAllow = new Set<string>();
 let gateway: Awaited<ReturnType<typeof startGateway>> | undefined;
 let busy = false;
 let quitting = false;
@@ -45,20 +54,20 @@ function publicState() {
     cost: c?.cost_sentence ?? null,
     linked: claimed || c?.claim_state === 'claimed',
     accountLink: accountLink ?? safeLink(c?.claim_state === 'claimed' ? c?.add_credit_url : c?.claim_url),
-    payment, workspace, running: Boolean(engine), busy, notice: lastNotice,
+    payment, workspace, running: Boolean(engine), busy, notice: lastNotice, tier,
   };
 }
 function notify() { if (window && !window.isDestroyed()) window.webContents.send('state', publicState()); }
-function bounds() {
-  if (!view || !window) return;
-  const [width, height] = window.getContentSize();
-  view.setBounds({ x: 0, y: 72, width, height: Math.max(0, height - 72) });
+function send(channel: string, value?: unknown) { if (window && !window.isDestroyed()) window.webContents.send(channel, value); }
+function showHome() { window.show(); notify(); send('home'); }
+function showWorkspace() { if (engine) { notify(); send('workspace'); } }
+function emit(event: EngineEvent | { type: 'approval'; id: string; tool: string; input: unknown }) {
+  if (event.type === 'error') event = { ...event, message: cleanMessage(event.message) };
+  send('engine', event);
 }
-function showHome() { view?.setVisible(false); window.show(); notify(); window.webContents.send('home'); }
-function showWorkspace() { if (view) { view.setVisible(true); bounds(); view.webContents.focus(); window.webContents.send('workspace'); } }
 async function stopEngine() {
-  const oldView = view; view = undefined;
-  if (oldView) { window.contentView.removeChildView(oldView); oldView.webContents.close(); }
+  for (const p of pending.values()) p.resolve(false);
+  pending.clear(); alwaysAllow.clear();
   const oldEngine = engine; engine = undefined;
   await oldEngine?.stop();
   const oldGateway = gateway; gateway = undefined;
@@ -82,47 +91,44 @@ async function refreshWallet() {
   notify();
   return publicState();
 }
-async function launch(tier: string) {
+async function launch(selectedTier: string, mode: 'continue' | 'new' = 'continue', folder?: string) {
   if (busy) throw new Error('The coding engine is already starting.');
-  if (!TIERS.includes(tier as any)) throw new Error('Choose a valid Publik tier.');
+  if (!TIERS.includes(selectedTier as Tier)) throw new Error('Choose a valid Publik tier.');
   const provider = resolveProvider(own);
   if (provider.kind === 'needs_consent') throw new Error('Connect Publik or your own API first.');
-  const selected = process.env.PUBLIK_CODE_TEST_WORKSPACE && process.env.PUBLIK_CODE_TEST === '1'
-    ? { canceled: false, filePaths: [process.env.PUBLIK_CODE_TEST_WORKSPACE] }
-    : await dialog.showOpenDialog(window, { title: 'Open a project you trust', properties: ['openDirectory', 'createDirectory'] });
-  if (selected.canceled || !selected.filePaths[0]) return publicState();
-  if (engine) {
-    const result = await dialog.showMessageBox(window, { type: 'question', message: 'Stop the current coding session and open another project?', buttons: ['Cancel', 'Open project'], defaultId: 0, cancelId: 0 });
-    if (result.response !== 1) return publicState();
+  let target = folder;
+  if (!target) {
+    const selected = process.env.PUBLIK_CODE_TEST_WORKSPACE && process.env.PUBLIK_CODE_TEST === '1'
+      ? { canceled: false, filePaths: [process.env.PUBLIK_CODE_TEST_WORKSPACE] }
+      : await dialog.showOpenDialog(window, { title: 'Open a project you trust', properties: ['openDirectory', 'createDirectory'] });
+    if (selected.canceled || !selected.filePaths[0]) return publicState();
+    target = selected.filePaths[0];
+    if (engine) {
+      const result = await dialog.showMessageBox(window, { type: 'question', message: 'Stop the current coding session and open another project?', buttons: ['Cancel', 'Open project'], defaultId: 0, cancelId: 0 });
+      if (result.response !== 1) return publicState();
+    }
   }
   busy = true; notify();
   try {
     await stopEngine();
-    workspace = realpathSync(selected.filePaths[0]);
+    workspace = realpathSync(target);
+    tier = selectedTier as Tier;
     gateway = await startGateway({ baseURL: provider.baseURL, apiKey: provider.apiKey, publik: provider.kind === 'publik', onEvent: event => {
       if (event.type === 'meter') meter = event;
-      else { payment = { ...event, message: cleanMessage(event.message) }; showHome(); }
+      else payment = { ...event, message: cleanMessage(event.message) };
       notify();
     } });
-    const binary = join(app.isPackaged ? process.resourcesPath : join(root, 'build'), 'runtime', process.platform === 'win32' ? 'opencode.exe' : 'opencode');
-    engine = await startRuntime({ binary, cwd: workspace, dataDir: join(app.getPath('userData'), 'engine'), config: runtimeConfig(gateway.baseURL, gateway.token, tier, provider.kind === 'own' ? own?.model : undefined), onExit: () => {
-      if (!quitting) { lastNotice = 'The coding engine stopped. You can reopen your project and resume the saved session.'; showHome(); void stopEngine(); }
-    } });
-    const currentEngine = engine;
-    const engineSession = session.fromPartition(`publik-engine-${Date.now()}`);
-    engineSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-    engineSession.setPermissionCheckHandler(() => false);
-    engineSession.webRequest.onBeforeSendHeaders({ urls: [`${engine.url}/*`] }, (details, callback) => {
-      callback({ requestHeaders: { ...details.requestHeaders, Authorization: currentEngine.auth, 'x-opencode-directory': workspace! } });
+    engine = await startEngine({
+      cwd: workspace, dataDir: app.getPath('userData'), gatewayURL: gateway.baseURL, gatewayToken: gateway.token,
+      provider: provider.kind === 'own' ? 'own' : 'publik', model: provider.kind === 'own' ? own!.model : tier, session: mode,
+      approve: request => {
+        if (alwaysAllow.has(request.tool)) return Promise.resolve(true);
+        return new Promise<boolean>(resolve => { pending.set(request.id, { tool: request.tool, resolve }); emit({ type: 'approval', ...request }); });
+      },
+      onEvent: emit,
     });
-    view = new WebContentsView({ webPreferences: { session: engineSession, contextIsolation: true, nodeIntegration: false, sandbox: true } });
-    view.webContents.setWindowOpenHandler(({ url }) => { const link = safeLink(url, false); if (link) void shell.openExternal(link); return { action: 'deny' }; });
-    view.webContents.on('will-navigate', (event, url) => { if (new URL(url).origin !== currentEngine.url) { event.preventDefault(); const link = safeLink(url, false); if (link) void shell.openExternal(link); } });
-    window.contentView.addChildView(view);
-    bounds();
-    const folder = Buffer.from(workspace).toString('base64url');
-    await view.webContents.loadURL(`${engine.url}/${folder}/session`);
     lastNotice = null;
+    send('history', engine.history());
     showWorkspace();
   } catch (error) { await stopEngine(); throw error; }
   finally { busy = false; notify(); }
@@ -136,11 +142,11 @@ function register(channel: string, action: (...args: any[]) => any) {
   });
 }
 app.whenReady().then(() => {
+  if (SELF_TEST) return;
   loadOwn();
   window = new BrowserWindow({ width: 1240, height: 840, minWidth: 720, minHeight: 640, title: 'Publik Code', backgroundColor: '#f6f4ef', webPreferences: { preload: join(root, 'dist/preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  window.on('resize', bounds);
   window.on('close', event => { if (!quitting) { event.preventDefault(); app.quit(); } });
   register('state', publicState);
   register('provision', async (consent: boolean) => {
@@ -171,7 +177,31 @@ app.whenReady().then(() => {
     if (!link) throw new Error('No valid account link is available. Open your Publik dashboard.');
     await shell.openExternal(link);
   });
-  register('launch', launch);
+  register('launch', (selected: string) => launch(selected));
+  register('new-chat', async () => { if (!workspace) throw new Error('Open a project first.'); return launch(tier, 'new', workspace); });
+  register('prompt', async (text: unknown) => {
+    if (!engine) throw new Error('Open a project first.');
+    if (typeof text !== 'string' || !text.trim()) return publicState();
+    payment = null; notify();
+    void engine.prompt(text.slice(0, 200_000));
+    return publicState();
+  });
+  register('abort', async () => { for (const p of pending.values()) p.resolve(false); pending.clear(); await engine?.abort(); return publicState(); });
+  register('approve', async (id: unknown, ok: unknown, always: unknown) => {
+    const entry = typeof id === 'string' ? pending.get(id) : undefined;
+    if (!entry) return publicState();
+    pending.delete(id as string);
+    // "Allow for this session" covers later calls of the same tool until the workspace stops.
+    if (ok === true && always === true) alwaysAllow.add(entry.tool);
+    entry.resolve(ok === true);
+    return publicState();
+  });
+  register('set-tier', async (next: unknown) => {
+    if (!TIERS.includes(next as Tier)) throw new Error('Choose a valid Publik tier.');
+    tier = next as Tier;
+    if (engine && resolveProvider(own).kind === 'publik') await engine.setTier(tier);
+    return publicState();
+  });
   register('home', showHome);
   register('resume', showWorkspace);
   register('stop', async () => { await stopEngine(); showHome(); return publicState(); });
