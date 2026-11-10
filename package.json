@@ -20,7 +20,7 @@
     "test": "tsx --test test/*.test.ts",
     "test:desktop": "npm run build && tsx scripts/desktop-smoke.ts",
     "package:mac": "npm run build && electron-builder --mac --publish never",
-    "package:win": "npm run build && electron-builder --win --publish never",
+    "package:win": "npm run build && electron-builder --win --x64 --publish never",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -61,7 +61,12 @@
     },
     "win": {
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "artifactName": "Publik-Code-${version}-windows-${arch}.${ext}",
       "icon": "resources/icon.ico"
@@ -70,6 +75,9 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
-    "artifactName": "Publik-Code-${version}-${os}-${arch}.${ext}"
+    "artifactName": "Publik-Code-${version}-${os}-${arch}.${ext}",
+    "toolsets": {
+      "nsis": "1.2.1"
+    }
   }
 }
