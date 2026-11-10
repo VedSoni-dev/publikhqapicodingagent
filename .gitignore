@@ -7,3 +7,4 @@ release/
 .DS_Store
 test-results/
 artifacts/
+publik-app-token.txt
