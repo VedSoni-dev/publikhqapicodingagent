@@ -1,7 +1,7 @@
 {
   "name": "publik-code",
   "version": "0.1.0",
-  "description": "A desktop coding agent powered by your Publik balance and OpenCode.",
+  "description": "A free desktop coding agent built on Pi, powered by your Publik balance or your own API key.",
   "author": "Vedant Soni",
   "license": "MIT",
   "private": true,
@@ -18,14 +18,13 @@
     "build": "node scripts/build.mjs",
     "start": "npm run build && electron .",
     "test": "tsx --test test/*.test.ts",
-    "test:smoke": "tsx scripts/smoke.ts",
     "test:desktop": "npm run build && tsx scripts/desktop-smoke.ts",
     "package:mac": "npm run build && electron-builder --mac --publish never",
     "package:win": "npm run build && electron-builder --win --publish never",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "opencode-ai": "1.18.34"
+    "@earendil-works/pi-coding-agent": "1.5.1"
   },
   "devDependencies": {
     "@playwright/test": "1.58.2",
@@ -49,17 +48,7 @@
       "publik-app-token.txt",
       "package.json",
       "LICENSE",
-      "THIRD_PARTY_NOTICES.md",
-      "!node_modules/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "build/runtime",
-        "to": "runtime",
-        "filter": [
-          "**/*"
-        ]
-      }
+      "THIRD_PARTY_NOTICES.md"
     ],
     "mac": {
       "category": "public.app-category.developer-tools",

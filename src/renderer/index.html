@@ -8,7 +8,7 @@
 <body>
 <header class="topbar"><button id="brand" class="brand" aria-label="Account and projects">publik<span class="dot">.</span><span class="code">code</span></button><span id="project" class="project">Your laptop. Your projects.</span><button id="account" class="quiet">Account & usage</button></header>
 <main id="home">
-<section class="intro"><div class="eyebrow"><span class="status-dot"></span> BUILT ON OPENCODE</div><h1>Make something <br>worth shipping.</h1><p class="lead">A coding agent for the projects on your laptop. <br>Connect your AI, open a folder, and get to work.</p></section>
+<section class="intro"><div class="eyebrow"><span class="status-dot"></span> BUILT ON PI</div><h1>Make something <br>worth shipping.</h1><p class="lead">A free coding agent for the projects on your laptop, built on Pi. <br>Connect Publik or your own key, open a folder, and get to work.</p></section>
 <section class="setup" aria-label="Set up your coding agent">
 <div id="error" class="notice error" role="alert" hidden></div><div id="notice" class="notice" role="status" hidden></div>
 <div id="payment" class="notice error" hidden><p id="payment-message"></p><button id="payment-link" class="link">Manage balance ↗</button></div>
@@ -26,5 +26,11 @@
 </section>
 <footer><span>Runs on your laptop. Model requests go to your chosen provider.</span><button id="source" class="link">Open source ↗</button></footer>
 </main>
+<section id="workspace" class="workspace" hidden aria-label="Coding workspace">
+<div class="ws-bar"><div class="ws-meta"><span id="ws-provider" class="badge">Publik</span><select id="ws-tier" aria-label="Model tier"><option value="publik-balanced">Balanced</option><option value="publik-fast">Fast</option><option value="publik-smart">Smart</option></select><span id="ws-balance" class="meter"></span></div><div class="ws-actions"><button id="new-chat" class="quiet">New chat</button><button id="ws-stop" class="quiet danger">Close project</button></div></div>
+<div id="ws-payment" class="notice error" hidden><p id="ws-payment-message"></p><button id="ws-payment-link" class="link">Add balance ↗</button></div>
+<div id="log" class="log" role="log" aria-live="polite"><div id="empty" class="empty"><h2>What should we build?</h2><p>The agent can read this project. It asks before it edits a file or runs a command.</p><div class="suggestions"><button class="chip">Give me a tour of this codebase</button><button class="chip">Find and fix a bug in the tests</button><button class="chip">Add a README section on how to run this</button></div></div></div>
+<form id="composer" class="composer"><textarea id="input" rows="3" placeholder="Ask Publik Code to change something… (Enter to send, Shift+Enter for a new line)" aria-label="Message"></textarea><div class="composer-row"><span class="hint">Edits and commands need your approval. Approvals are not a sandbox: an approved command runs with your account's permissions.</span><button id="abort" class="quiet danger" type="button" hidden>Stop</button><button id="send" class="primary dark" type="submit">Send <span>↵</span></button></div></form>
+</section>
 <script src="app.js"></script>
 </body></html>

@@ -24,7 +24,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm run test:smoke
       - run: npm run test:desktop
         if: runner.os == 'macOS'
       # The public pat_ app token lives in an Actions secret, not git. Without it the
