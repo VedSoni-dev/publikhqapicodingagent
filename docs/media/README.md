@@ -4,7 +4,7 @@ Every screenshot, video and GIF here comes from the real Publik Code app. Nothin
 
 | File | What it shows |
 |:---|:---|
-| `cover.png` | Listing cover (1200×630 @2x), rendered from `src/cover.html` around a real app screenshot by `scripts/render-cover.ts`. |
+| `cover.png` | Listing cover (1200×630), rendered from `src/cover.html` around a real app screenshot by `scripts/render-cover.ts` (re-render with `03-agent-editing.png` once captured). |
 | `01-first-run.png` | First launch on a fresh computer: Publik disclosure, consent, own-key option. |
 | `02-publik-linking.png` | Publik provisioned on this computer: balance, Publik's cost disclosure, "Link this computer & pick a plan". |
 | `05-settings-own-key.png` | Bring-your-own-key settings. |
