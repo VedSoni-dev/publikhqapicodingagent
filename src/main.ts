@@ -4,7 +4,12 @@ import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { startGateway, safeLink, validateBaseURL, type GatewayEvent } from './gateway';
 import { startRuntime, runtimeConfig, TIERS } from './runtime';
-import { APP_SLUG, APP_VERSION, DISCLOSURE, provision, resolveProvider, readCredential, credentialPath } from './publik';
+import { APP_SLUG, APP_VERSION, ensureSignedIn, resolveProvider, readCredential, setChoice, type GateAction, type GateScreen, type GateUI } from './publik';
+
+/** Shown next to "Connect Publik" on the home screen. */
+const DISCLOSURE =
+  "Publik API runs this app's AI with no key to paste, priced per use in dollars from your publik balance or plan. " +
+  "Your prompts go through publik's servers to the model. You can switch to your own key at any time.";
 
 app.setName('Publik Code');
 let window: BrowserWindow;
@@ -24,6 +29,47 @@ let lastNotice: string | null = null;
 const root = app.getAppPath();
 const homeURL = pathToFileURL(join(root, 'src/renderer/index.html')).href;
 const cleanMessage = (message: string) => message.replace(/\b(?:pk_|pat_|pbt_)[A-Za-z0-9_-]+/g, '[redacted]');
+/** Sign in with publik (https://publikhq.com/sdk/publik.ts.md), drawn in a small window before the app's own.
+ *  Not dialog.showMessageBox: on macOS a parentless message box blocks the main process, which would stop
+ *  the gate's 3-second sign-in check until the user clicked again. Closing this window quits the app. */
+let gateWindow: BrowserWindow | null = null;
+let gatePassed = false;
+const esc = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+function gateHtml(screen: GateScreen): string {
+  const buttons = screen.buttons.map((b, i) => `<a class="${i ? 'b' : 'b p'}" href="https://publik-gate.invalid/${i}">${esc(b.label)}</a>`).join('');
+  return `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+<title>Publik Code</title><style>
+:root{color-scheme:light dark}body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f6f4ef;color:#1c1b19;display:grid;place-items:center;min-height:100vh}
+main{max-width:360px;padding:32px 28px}small{color:#6d6a63;letter-spacing:.04em;text-transform:uppercase;font-size:11px}h1{font-size:22px;margin:4px 0 10px}
+p{margin:0 0 12px;color:#3b3934}.note{color:#6d6a63;font-size:13px}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.b{display:inline-block;padding:9px 16px;border-radius:9px;border:1px solid #cfcac0;color:inherit;text-decoration:none;font-weight:600}.p{background:#1c1b19;color:#f6f4ef;border-color:#1c1b19}
+@media (prefers-color-scheme:dark){body{background:#171614;color:#f1eee8}p{color:#d6d2ca}.note,small{color:#9c978d}.b{border-color:#46433d}.p{background:#f1eee8;color:#171614;border-color:#f1eee8}}
+</style><main><small>Publik Code</small><h1>${esc(screen.title)}</h1><p>${esc(screen.body)}</p>${screen.note ? `<p class="note">${esc(screen.note)}</p>` : ''}<div class="row">${buttons}</div></main>`;
+}
+const gateUI: GateUI = {
+  show(screen, signal) {
+    return new Promise<GateAction>(resolve => {
+      if (!gateWindow || gateWindow.isDestroyed()) {
+        gateWindow = new BrowserWindow({ width: 480, height: 380, resizable: false, fullscreenable: false, title: 'Publik Code', backgroundColor: '#f6f4ef', show: false,
+          webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, javascript: false } });
+        gateWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+        gateWindow.once('ready-to-show', () => gateWindow?.show());
+        gateWindow.on('closed', () => { gateWindow = null; if (!gatePassed) app.exit(0); });
+      }
+      const contents = gateWindow.webContents;
+      const onNavigate = (event: Electron.Event, url: string) => {
+        event.preventDefault();
+        const index = Number(/^https:\/\/publik-gate\.invalid\/(\d+)$/.exec(url)?.[1] ?? -1);
+        const button = screen.buttons[index];
+        if (button && !signal.aborted) { contents.off('will-navigate', onNavigate); resolve(button.action); }
+      };
+      contents.on('will-navigate', onNavigate);
+      signal.addEventListener('abort', () => contents.off('will-navigate', onNavigate), { once: true }); // the gate moved on
+      void gateWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(gateHtml(screen))}`);
+    });
+  },
+  openUrl(url) { const link = safeLink(url); if (link) void shell.openExternal(link); },
+};
 const ownPath = () => join(app.getPath('userData'), 'own-provider.enc');
 function loadOwn() {
   try {
@@ -35,16 +81,16 @@ function loadOwn() {
 }
 function publicState() {
   const provider = resolveProvider(own);
-  const c = provider.kind === 'publik' ? provider.credential : null;
+  const c = readCredential();
   const tokenReady = Boolean(process.env.PUBLIK_APP_TOKEN || existsSync(join(root, 'publik-app-token.txt')));
   return {
     version: APP_VERSION, slug: APP_SLUG, disclosure: DISCLOSURE, tokenReady,
     provider: provider.kind, own: own ? { baseURL: own.baseURL, model: own.model } : null,
-    balanceMicros: walletBalance ?? c?.balance_micros ?? null,
+    balanceMicros: walletBalance,
     balanceHeader: meter?.balance ?? null, chargeMicros: meter?.charge ?? null,
-    cost: c?.cost_sentence ?? null,
-    linked: claimed || c?.claim_state === 'claimed',
-    accountLink: accountLink ?? safeLink(c?.claim_state === 'claimed' ? c?.add_credit_url : c?.claim_url),
+    cost: null,
+    linked: claimed,
+    accountLink: accountLink ?? safeLink(c?.claim_url),
     payment, workspace, running: Boolean(engine), busy, notice: lastNotice,
   };
 }
@@ -77,7 +123,7 @@ async function refreshWallet() {
   if (balanceHeader) meter = { type: 'meter', balance: balanceHeader, charge: meter?.charge ?? null, usage: null, budget: null, reset: null };
   const state = body.claim_state ?? body.install?.claim_state;
   if (state === 'claimed') claimed = true;
-  accountLink = safeLink(body.add_credit_url ?? body.wallet?.add_credit_url) ?? accountLink;
+  accountLink = safeLink(body.top_up_url ?? body.add_credit_url ?? body.wallet?.add_credit_url) ?? accountLink;
   payment = null;
   notify();
   return publicState();
@@ -86,7 +132,7 @@ async function launch(tier: string) {
   if (busy) throw new Error('The coding engine is already starting.');
   if (!TIERS.includes(tier as any)) throw new Error('Choose a valid Publik tier.');
   const provider = resolveProvider(own);
-  if (provider.kind === 'needs_consent') throw new Error('Connect Publik or your own API first.');
+  if (provider.kind === 'needs_own_key') throw new Error('Connect Publik or your own API first.');
   const selected = process.env.PUBLIK_CODE_TEST_WORKSPACE && process.env.PUBLIK_CODE_TEST === '1'
     ? { canceled: false, filePaths: [process.env.PUBLIK_CODE_TEST_WORKSPACE] }
     : await dialog.showOpenDialog(window, { title: 'Open a project you trust', properties: ['openDirectory', 'createDirectory'] });
@@ -135,9 +181,16 @@ function register(channel: string, action: (...args: any[]) => any) {
     catch (error) { return { ok: false, error: cleanMessage(error instanceof Error ? error.message : 'The action could not be completed.') }; }
   });
 }
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Sign in with publik before any window. PUBLIK_SELF_TEST=1 prints the self-test line here and exits.
+  // ensureSignedIn() also starts usage counting (app_opened, then active_session every 30 minutes).
+  const gate = await ensureSignedIn(gateUI);
+  claimed = gate.wallet.claim_state === 'claimed';
+  walletBalance = gate.wallet.balance_micros;
+  accountLink = safeLink(gate.wallet.top_up_url);
   loadOwn();
   window = new BrowserWindow({ width: 1240, height: 840, minWidth: 720, minHeight: 640, title: 'Publik Code', backgroundColor: '#f6f4ef', webPreferences: { preload: join(root, 'dist/preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  gatePassed = true; gateWindow?.destroy(); // the app's window exists now, so closing the gate does not quit
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.on('resize', bounds);
@@ -145,7 +198,8 @@ app.whenReady().then(() => {
   register('state', publicState);
   register('provision', async (consent: boolean) => {
     if (consent !== true) throw new Error('Accept the Publik disclosure to continue.');
-    if (resolveProvider().kind === 'needs_consent') await provision();
+    if (engine) throw new Error('Stop the current workspace before changing API connections.');
+    setChoice('publik');
     return publicState();
   });
   register('refresh', refreshWallet);
@@ -155,6 +209,7 @@ app.whenReady().then(() => {
     const next = { baseURL: validateBaseURL(data.baseURL), apiKey: data.apiKey.trim(), model: data.model.trim() };
     if (data.remember && !safeStorage.isEncryptionAvailable()) throw new Error('Secure storage is unavailable. Uncheck Remember to use this key for this session only.');
     own = next;
+    setChoice('own_key');
     const { rmSync } = await import('node:fs');
     if (data.remember) writeFileSync(ownPath(), safeStorage.encryptString(JSON.stringify(own)), { mode: 0o600 });
     else rmSync(ownPath(), { force: true });
@@ -162,7 +217,7 @@ app.whenReady().then(() => {
   });
   register('use-publik', async () => {
     if (engine) throw new Error('Stop the current workspace before changing API connections.');
-    own = null; const { rmSync } = await import('node:fs'); rmSync(ownPath(), { force: true }); return publicState();
+    own = null; setChoice('publik'); const { rmSync } = await import('node:fs'); rmSync(ownPath(), { force: true }); return publicState();
   });
   register('open-link', async (kind: string) => {
     const state = publicState();

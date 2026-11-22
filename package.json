@@ -19,7 +19,7 @@
     "start": "npm run build && electron .",
     "test": "tsx --test test/*.test.ts",
     "test:smoke": "tsx scripts/smoke.ts",
-    "test:desktop": "npm run build && tsx scripts/desktop-smoke.ts",
+    "test:desktop": "npm run build && tsx scripts/gate-smoke.ts",
     "package:mac": "npm run build && electron-builder --mac --publish never",
     "package:win": "npm run build && electron-builder --win --publish never",
     "typecheck": "tsc --noEmit"

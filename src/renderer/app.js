@@ -13,7 +13,7 @@ function render(next) {
   $('switch-publik').hidden = state.provider !== 'own';
   $('token-note').hidden = state.tokenReady || state.provider === 'publik';
   $('connect').disabled = !state.tokenReady || !$('consent').checked || working;
-  $('open-project').disabled = state.provider === 'needs_consent' || state.busy || working;
+  $('open-project').disabled = state.provider === 'needs_own_key' || state.busy || working;
   $('open-project').firstChild.textContent = state.busy ? 'Starting coding engine… ' : 'Choose a project folder ';
   $('tier-label').hidden = state.provider === 'own';
   $('running-actions').hidden = !state.running;
